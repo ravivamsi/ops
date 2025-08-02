@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operations - Health Dashboard</title>
+    <title th:text="${app.name + ' - Operations'}">App Operations</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -112,7 +112,10 @@
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="pt-3 pb-2 mb-3">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Operations</h1>
+                        <div>
+                            <h1 class="h2" th:text="${app.name + ' Operations'}">App Operations</h1>
+                            <p class="text-muted" th:text="${app.description}">App Description</p>
+                        </div>
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group me-2">
                                 <a href="/admin/operations" class="btn btn-sm btn-outline-secondary">
@@ -122,25 +125,8 @@
                         </div>
                     </div>
                     
-                    <!-- Application Selection -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Select Application</h5>
-                                    <select class="form-select" id="appSelect">
-                                        <option value="">Choose an application...</option>
-                                        <option th:each="app : ${apps}" 
-                                                th:value="${app.id}" 
-                                                th:text="${app.name}">App Name</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Operations Security Toggle -->
-                    <div class="row mb-4" id="securityToggle" style="display: none;">
+                    <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
@@ -168,7 +154,7 @@
                     </div>
                     
                     <!-- Operations List -->
-                    <div class="row operations-disabled" id="operationsList" style="display: none;">
+                    <div class="row operations-disabled" id="operationsContainer" th:if="${not #lists.isEmpty(operations)}">
                         <div class="col-12">
                             <h3 class="mb-4">Available Operations</h3>
                         </div>
@@ -200,7 +186,7 @@
                     </div>
                     
                     <!-- Empty State -->
-                    <div class="row" id="emptyState" style="display: none;">
+                    <div class="row" th:if="${#lists.isEmpty(operations)}">
                         <div class="col-12 text-center py-5">
                             <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
                             <h3 class="text-muted">No Operations Found</h3>
@@ -211,25 +197,32 @@
                         </div>
                     </div>
                     
-                    <!-- Result Modal -->
-                    <div class="modal fade" id="resultModal" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Operation Result</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <pre id="resultContent" style="white-space: pre-wrap;"></pre>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Back Button -->
+                    <div class="mt-4">
+                        <a href="/operations" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Operations
+                        </a>
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+    
+    <!-- Result Modal -->
+    <div class="modal fade" id="resultModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Operation Result</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="resultContent" style="white-space: pre-wrap;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -254,7 +247,7 @@
                     if (validateSecurityCode(code)) {
                         // Enable operations
                         $('#operationsToggle').prop('checked', true).prop('disabled', false);
-                        $('#operationsList').removeClass('operations-disabled');
+                        $('#operationsContainer').removeClass('operations-disabled');
                         $('#enterCodeBtn').html('<i class="fas fa-check me-1"></i> Code Accepted').addClass('btn-success').removeClass('btn-primary');
                         alert('Security code accepted! Operations are now enabled.');
                     } else {
@@ -267,21 +260,15 @@
             $('#operationsToggle').change(function() {
                 if (!$(this).is(':checked')) {
                     // Disable operations
-                    $('#operationsList').addClass('operations-disabled');
+                    $('#operationsContainer').addClass('operations-disabled');
                     $('#enterCodeBtn').html('<i class="fas fa-key me-1"></i> Enter Code').removeClass('btn-success').addClass('btn-primary');
                 } else {
                     // Enable operations
-                    $('#operationsList').removeClass('operations-disabled');
+                    $('#operationsContainer').removeClass('operations-disabled');
                 }
             });
             
-            $('#appSelect').change(function() {
-                var appId = $(this).val();
-                if (appId) {
-                    window.location.href = '/operations/app/' + appId;
-                }
-            });
-            
+            // Execute operation functionality
             $('.execute-operation').click(function() {
                 // Check if operations are enabled
                 if ($('#operationsToggle').is(':checked')) {

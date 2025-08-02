@@ -32,6 +32,47 @@ public class DashboardController {
     @GetMapping
     public String dashboard(Model model) {
         List<Group> groups = groupService.getAllGroups();
+        
+        // Calculate health status for each group
+        for (Group group : groups) {
+            boolean groupHealthy = true;
+            boolean hasHealthChecks = false;
+            
+            for (App app : group.getApps()) {
+                List<HealthCheck> appHealthChecks = healthCheckService.getHealthChecksByAppId(app.getId());
+                if (!appHealthChecks.isEmpty()) {
+                    hasHealthChecks = true;
+                    boolean appHealthy = true;
+                    
+                    for (HealthCheck healthCheck : appHealthChecks) {
+                        if (healthCheck.getStatus() != HealthCheck.HealthStatus.HEALTHY) {
+                            appHealthy = false;
+                            groupHealthy = false;
+                            break;
+                        }
+                    }
+                    
+                    // Set app health status
+                    if (appHealthy) {
+                        app.setHealthStatus("healthy");
+                    } else {
+                        app.setHealthStatus("unhealthy");
+                    }
+                } else {
+                    app.setHealthStatus("unknown");
+                }
+            }
+            
+            // Set group health status
+            if (!hasHealthChecks) {
+                group.setHealthStatus("unknown");
+            } else if (groupHealthy) {
+                group.setHealthStatus("healthy");
+            } else {
+                group.setHealthStatus("unhealthy");
+            }
+        }
+        
         model.addAttribute("groups", groups);
         return "dashboard";
     }
@@ -44,6 +85,31 @@ public class DashboardController {
         }
         
         List<App> apps = appService.getAppsByGroupId(groupId);
+        
+        // Calculate health status for each app
+        for (App app : apps) {
+            List<HealthCheck> appHealthChecks = healthCheckService.getHealthChecksByAppId(app.getId());
+            if (!appHealthChecks.isEmpty()) {
+                boolean appHealthy = true;
+                
+                for (HealthCheck healthCheck : appHealthChecks) {
+                    if (healthCheck.getStatus() != HealthCheck.HealthStatus.HEALTHY) {
+                        appHealthy = false;
+                        break;
+                    }
+                }
+                
+                // Set app health status
+                if (appHealthy) {
+                    app.setHealthStatus("healthy");
+                } else {
+                    app.setHealthStatus("unhealthy");
+                }
+            } else {
+                app.setHealthStatus("unknown");
+            }
+        }
+        
         model.addAttribute("group", group);
         model.addAttribute("apps", apps);
         return "group-details";

@@ -14,9 +14,10 @@ public class App {
     private Long id;
     
     @NotBlank(message = "App name is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
     
+    @Column(length = 500)
     private String description;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,6 +29,9 @@ public class App {
     
     @OneToMany(mappedBy = "app", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Operation> operations = new ArrayList<>();
+    
+    @Transient
+    private String healthStatus;
     
     // Constructors
     public App() {}
@@ -94,5 +98,13 @@ public class App {
     public void addOperation(Operation operation) {
         operations.add(operation);
         operation.setApp(this);
+    }
+    
+    public String getHealthStatus() {
+        return healthStatus;
+    }
+    
+    public void setHealthStatus(String healthStatus) {
+        this.healthStatus = healthStatus;
     }
 } 

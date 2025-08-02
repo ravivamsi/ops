@@ -13,13 +13,14 @@ public class HealthCheck {
     private Long id;
     
     @NotBlank(message = "Application name is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
     
     @NotBlank(message = "Health check URL is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String url;
     
+    @Column(length = 500)
     private String description;
     
     @Enumerated(EnumType.STRING)
@@ -28,6 +29,7 @@ public class HealthCheck {
     
     private LocalDateTime lastChecked;
     
+    @Column(length = 1000)
     private String lastResponse;
     
     private Integer responseTime;

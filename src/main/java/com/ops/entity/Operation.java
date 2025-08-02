@@ -12,21 +12,24 @@ public class Operation {
     private Long id;
     
     @NotBlank(message = "Operation name is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
     
+    @Column(length = 500)
     private String description;
     
     @NotBlank(message = "Operation URL is required")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String url;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private HttpMethod method = HttpMethod.GET;
     
+    @Column(length = 1000)
     private String requestBody;
     
+    @Column(length = 500)
     private String headers;
     
     @ManyToOne(fetch = FetchType.LAZY)

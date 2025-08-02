@@ -64,6 +64,15 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+        .group-card.healthy {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .group-card.unhealthy {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        .group-card.unknown {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
         .app-count {
             font-size: 2rem;
             font-weight: bold;
@@ -126,7 +135,7 @@
                             <h3 class="mb-4">Application Groups</h3>
                         </div>
                         <div class="col-md-6 col-lg-4 mb-4" th:each="group : ${groups}">
-                            <div class="card group-card h-100">
+                            <div class="card group-card h-100" th:classappend="${group.healthStatus}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>

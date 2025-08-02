@@ -62,7 +62,13 @@ public class HealthCheckService {
             
             healthCheck.setResponseTime(responseTime);
             healthCheck.setLastChecked(LocalDateTime.now());
-            healthCheck.setLastResponse(response.getBody().toString());
+            
+            // Truncate response if it's too long to prevent database issues
+            String responseBody = response.getBody().toString();
+            if (responseBody.length() > 950) { // Leave some buffer for the 1000 char limit
+                responseBody = responseBody.substring(0, 950) + "... [truncated]";
+            }
+            healthCheck.setLastResponse(responseBody);
             
             // Enhanced health status validation
             boolean isHealthy = validateHealthResponse(response);
@@ -78,7 +84,13 @@ public class HealthCheckService {
             logger.error("Health check failed for {}: {}", healthCheck.getName(), e.getMessage());
             healthCheck.setStatus(HealthCheck.HealthStatus.UNHEALTHY);
             healthCheck.setLastChecked(LocalDateTime.now());
-            healthCheck.setLastResponse("Error: " + e.getMessage());
+            
+            // Truncate error message if it's too long
+            String errorMessage = "Error: " + e.getMessage();
+            if (errorMessage.length() > 950) {
+                errorMessage = errorMessage.substring(0, 950) + "... [truncated]";
+            }
+            healthCheck.setLastResponse(errorMessage);
             healthCheckRepository.save(healthCheck);
         }
     }

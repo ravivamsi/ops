@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Groups</title>
+    <title>Edit Application - Admin</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -50,9 +50,6 @@
             pointer-events: none;
             opacity: 0.5;
         }
-        .admin-disabled .table {
-            opacity: 0.5;
-        }
     </style>
 </head>
 <body>
@@ -95,7 +92,7 @@
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="pt-3 pb-2 mb-3">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Manage Groups</h1>
+                        <h1 class="h2">Edit Application</h1>
                     </div>
                     
                     <!-- Administration Security Toggle -->
@@ -126,17 +123,17 @@
                         </div>
                     </div>
                     
-                    <!-- Add New Group -->
-                    <div class="row mb-4 admin-disabled" id="adminContent">
+                    <!-- Edit Application Form -->
+                    <div class="row admin-disabled" id="adminContent">
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">Add New Group</h5>
+                                    <h5 class="mb-0">Edit Application: <span th:text="${app.name}">App Name</span></h5>
                                 </div>
                                 <div class="card-body">
-                                    <form th:action="@{/admin/groups}" th:object="${newGroup}" method="post">
+                                    <form th:action="@{/admin/apps/{id}/edit(id=${app.id})}" th:object="${app}" method="post">
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Group Name</label>
+                                            <label for="name" class="form-label">Application Name</label>
                                             <input type="text" class="form-control" id="name" th:field="*{name}" required>
                                             <div class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
                                         </div>
@@ -144,74 +141,29 @@
                                             <label for="description" class="form-label">Description</label>
                                             <textarea class="form-control" id="description" th:field="*{description}" rows="3"></textarea>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-plus me-1"></i> Add Group
-                                        </button>
+                                        <div class="mb-3">
+                                            <label for="group" class="form-label">Group</label>
+                                            <select class="form-select" id="group" th:field="*{group}" required>
+                                                <option value="">Select a group...</option>
+                                                <option th:each="group : ${groups}" 
+                                                        th:value="${group.id}" 
+                                                        th:text="${group.name}"
+                                                        th:selected="${group.id == app.group.id}">Group Name</option>
+                                            </select>
+                                            <div class="text-danger" th:if="${#fields.hasErrors('group')}" th:errors="*{group}"></div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-1"></i> Update Application
+                                            </button>
+                                            <a href="/admin/apps" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times me-1"></i> Cancel
+                                            </a>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Groups List -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Existing Groups</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Description</th>
-                                                    <th>Applications</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr th:each="group : ${groups}">
-                                                    <td th:text="${group.name}">Group Name</td>
-                                                    <td th:text="${group.description}">Description</td>
-                                                    <td th:text="${#lists.size(group.apps)}">0</td>
-                                                    <td>
-                                                        <a th:href="@{/admin/groups/{id}/edit(id=${group.id})}" 
-                                                           class="btn btn-primary btn-sm me-1">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <form th:action="@{/admin/groups/{id}/delete(id=${group.id})}" 
-                                                              method="post" style="display: inline;">
-                                                            <button type="submit" class="btn btn-danger btn-sm" 
-                                                                    onclick="return confirm('Are you sure you want to delete this group?')">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Navigation -->
-                    <div class="mt-4">
-                        <a href="/admin/apps" class="btn btn-primary me-2">
-                            <i class="fas fa-arrow-right me-1"></i> Manage Applications
-                        </a>
-                        <a href="/admin/health-checks" class="btn btn-primary me-2">
-                            <i class="fas fa-stethoscope me-1"></i> Manage Health Checks
-                        </a>
-                        <a href="/admin/operations" class="btn btn-primary me-2">
-                            <i class="fas fa-cogs me-1"></i> Manage Operations
-                        </a>
-                        <a href="/dashboard" class="btn btn-outline-secondary">
-                            <i class="fas fa-home me-1"></i> Back to Dashboard
-                        </a>
                     </div>
                 </div>
             </main>

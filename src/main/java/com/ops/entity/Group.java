@@ -14,13 +14,17 @@ public class Group {
     private Long id;
     
     @NotBlank(message = "Group name is required")
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 255)
     private String name;
     
+    @Column(length = 500)
     private String description;
     
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<App> apps = new ArrayList<>();
+    
+    @Transient
+    private String healthStatus;
     
     // Constructors
     public Group() {}
@@ -71,5 +75,13 @@ public class Group {
     public void removeApp(App app) {
         apps.remove(app);
         app.setGroup(null);
+    }
+    
+    public String getHealthStatus() {
+        return healthStatus;
+    }
+    
+    public void setHealthStatus(String healthStatus) {
+        this.healthStatus = healthStatus;
     }
 } 

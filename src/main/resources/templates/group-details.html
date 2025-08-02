@@ -64,6 +64,15 @@
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
         }
+        .app-card.healthy {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .app-card.unhealthy {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        .app-card.unknown {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
         .health-percentage {
             font-size: 1.5rem;
             font-weight: bold;
@@ -129,7 +138,7 @@
                             <h3 class="mb-4">Applications</h3>
                         </div>
                         <div class="col-md-6 col-lg-4 mb-4" th:each="app : ${apps}">
-                            <div class="card app-card h-100">
+                            <div class="card app-card h-100" th:classappend="${app.healthStatus}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
