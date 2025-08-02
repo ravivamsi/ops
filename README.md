@@ -1,27 +1,43 @@
 # Health Dashboard
 
-A Spring Boot application with Thymeleaf UI for monitoring application health and managing operations.
+A Spring Boot application with Thymeleaf UI for monitoring application health and managing operations with comprehensive security features.
 
 ## Features
 
 ### Health Dashboard
 - **Customizable Health Dashboard**: Groups contain multiple applications, and applications contain multiple health check endpoints
 - **Hierarchical Navigation**: View groups → applications → health checks
-- **Real-time Health Monitoring**: Automatic health checks every 5 minutes
-- **Manual Health Checks**: Perform health checks on-demand
+- **Real-time Health Monitoring**: Automatic health checks every 5 seconds
+- **Manual Health Checks**: Perform health checks on-demand with visual feedback
+- **Color-Coded Health Status**: 
+  - 🟢 **Light Green**: All health checks pass
+  - 🟠 **Reddish Yellow**: Any health check fails
+  - ⚫ **Gray**: No health checks configured
 - **Health Status Indicators**: Visual status indicators (Healthy, Unhealthy, Unknown)
+- **Auto-refresh**: Dashboard refreshes every 30 seconds
 
 ### Operations Page
 - **Application Selection**: Dropdown to select applications
 - **Configurable Operations**: Each application can have different sets of operations
 - **REST API Execution**: Execute operations using Unirest for HTTP calls
 - **Operation Results**: View operation execution results in modal dialogs
+- **Security Toggle**: Operations require security code (3 letters + 12 numbers) to enable
+- **Visual Feedback**: Disabled operations are grayed out until security code is entered
 
 ### Administration
-- **Group Management**: Create, view, and delete application groups
-- **Application Management**: Add applications to groups
-- **Health Check Configuration**: Configure health check endpoints
-- **Operation Configuration**: Set up operations with different HTTP methods
+- **Group Management**: Create, view, edit, and delete application groups
+- **Application Management**: Add, edit, and delete applications to groups
+- **Health Check Configuration**: Configure health check endpoints with full CRUD operations
+- **Operation Configuration**: Set up operations with different HTTP methods and full CRUD operations
+- **Security Toggle**: All administration functions require security code (3 letters + 12 numbers) to enable
+- **Visual Protection**: All admin forms and buttons are disabled until security code is entered
+
+### Security Features
+- **Operations Security**: Toggle to enable/disable operation execution
+- **Administration Security**: Toggle to enable/disable all admin functions
+- **Code Validation**: Requires exactly 3 letters followed by 12 numbers (e.g., ABC123456789012)
+- **Visual Feedback**: Disabled elements are grayed out and non-interactive
+- **Consistent Security**: Same security mechanism across all protected areas
 
 ## Technology Stack
 
@@ -29,9 +45,10 @@ A Spring Boot application with Thymeleaf UI for monitoring application health an
 - **Thymeleaf**: Server-side templating engine
 - **H2 Database**: In-memory database for development
 - **Spring Data JPA**: Data access layer
-- **Unirest**: HTTP client for REST API calls
+- **Unirest 3.14.5**: HTTP client for REST API calls
 - **Bootstrap 5**: UI framework
 - **Font Awesome**: Icons
+- **jQuery**: Client-side JavaScript functionality
 
 ## Getting Started
 
@@ -69,21 +86,21 @@ A Spring Boot application with Thymeleaf UI for monitoring application health an
 ### Core Components
 
 #### Entities
-- `Group`: Application groups (e.g., Web Services, Internal Apps)
-- `App`: Applications within groups
+- `Group`: Application groups (e.g., Web Services, Internal Apps) with health status
+- `App`: Applications within groups with health status
 - `HealthCheck`: Health check endpoints for applications
 - `Operation`: REST operations for applications
 
 #### Services
 - `GroupService`: Group management
 - `AppService`: Application management
-- `HealthCheckService`: Health check monitoring with Unirest
+- `HealthCheckService`: Health check monitoring with Unirest and scheduled execution
 - `OperationService`: Operation execution
 
 #### Controllers
-- `DashboardController`: Health dashboard views
-- `OperationsController`: Operations page
-- `AdminController`: Administration interface
+- `DashboardController`: Health dashboard views with health status calculation
+- `OperationsController`: Operations page with security
+- `AdminController`: Administration interface with full CRUD operations
 - `HomeController`: Main entry point
 
 ### Database Schema
@@ -98,24 +115,37 @@ The application uses H2 in-memory database with the following tables:
 
 ### Health Dashboard
 
-1. **View Groups**: The main dashboard shows all application groups
-2. **Group Details**: Click on a group to see its applications
+1. **View Groups**: The main dashboard shows all application groups with color-coded health status
+2. **Group Details**: Click on a group to see its applications with individual health status
 3. **Application Health**: Click on an application to view its health checks
-4. **Manual Health Checks**: Use "Check Now" buttons to perform health checks manually
+4. **Manual Health Checks**: Use "Check Now" buttons to perform health checks manually with visual feedback
+5. **Health Status**: 
+   - **Groups**: Green if all apps healthy, Reddish-yellow if any app unhealthy
+   - **Applications**: Green if all health checks pass, Reddish-yellow if any fail
 
 ### Operations
 
-1. **Select Application**: Choose an application from the dropdown
-2. **View Operations**: See available operations for the selected application
-3. **Execute Operations**: Click "Execute" to run operations
-4. **View Results**: Results are displayed in modal dialogs
+1. **Security Code**: Enter the security code (3 letters + 12 numbers) to enable operations
+2. **Select Application**: Choose an application from the dropdown
+3. **View Operations**: See available operations for the selected application
+4. **Execute Operations**: Click "Execute" to run operations (only when enabled)
+5. **View Results**: Results are displayed in modal dialogs
 
 ### Administration
 
-1. **Manage Groups**: Add, view, and delete application groups
-2. **Manage Applications**: Add applications to groups
-3. **Configure Health Checks**: Set up health check endpoints
-4. **Configure Operations**: Define REST operations with HTTP methods
+1. **Security Code**: Enter the security code (3 letters + 12 numbers) to enable admin functions
+2. **Manage Groups**: Add, view, edit, and delete application groups
+3. **Manage Applications**: Add, edit, and delete applications to groups
+4. **Configure Health Checks**: Set up health check endpoints with full CRUD operations
+5. **Configure Operations**: Define REST operations with HTTP methods and full CRUD operations
+
+### Security Code Format
+
+All protected functions require a security code with the following format:
+- **Format**: Exactly 3 letters followed by exactly 12 numbers
+- **Example**: `ABC123456789012`
+- **Validation**: Real-time JavaScript validation
+- **Scope**: Each page requires separate code entry
 
 ## Sample Data
 
@@ -149,6 +179,14 @@ Health checks are automatically performed every 5 seconds. The system validates 
 
 You can modify the schedule in `HealthCheckService.java` by changing the `@Scheduled(fixedRate = 5000)` annotation.
 
+### Security Configuration
+
+Security toggles are implemented client-side with JavaScript:
+- **Code Validation**: Regex pattern `/^[A-Za-z]{3}\d{12}$/`
+- **Visual Feedback**: Disabled elements have 50% opacity
+- **Button States**: "Enter Code" button changes color on success
+- **Form Protection**: All inputs and buttons disabled until code entered
+
 ## Development
 
 ### Adding New Features
@@ -166,6 +204,14 @@ Health checks use Unirest to make HTTP requests. Modify the `performHealthCheck`
 
 Operations support all HTTP methods (GET, POST, PUT, DELETE, PATCH). Configure operations through the admin interface or add them programmatically.
 
+### Security Implementation
+
+Security toggles are implemented using:
+- **CSS Classes**: `.admin-disabled` and `.operations-disabled`
+- **JavaScript**: jQuery for dynamic enable/disable functionality
+- **Visual Feedback**: Color changes and opacity adjustments
+- **Form Protection**: Disabled inputs and buttons
+
 ## Troubleshooting
 
 ### Common Issues
@@ -173,6 +219,8 @@ Operations support all HTTP methods (GET, POST, PUT, DELETE, PATCH). Configure o
 1. **Health checks failing**: Ensure target URLs are accessible
 2. **Database issues**: Check H2 console for data integrity
 3. **Template errors**: Verify Thymeleaf syntax in templates
+4. **Security code not working**: Ensure format is exactly 3 letters + 12 numbers
+5. **Operations not executing**: Check if security toggle is enabled
 
 ### Logs
 
@@ -186,6 +234,12 @@ Health check logs show:
 - Response times and HTTP status codes
 - Validation results and status changes
 - Error messages for failed health checks
+
+### Security Troubleshooting
+
+- **Code not accepted**: Verify format is exactly 3 letters + 12 numbers
+- **Functions still disabled**: Check browser console for JavaScript errors
+- **Visual issues**: Ensure jQuery is loaded properly
 
 ## Contributing
 
