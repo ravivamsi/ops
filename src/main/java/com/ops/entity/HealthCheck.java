@@ -12,7 +12,7 @@ public class HealthCheck {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "Health check name is required")
+    @NotBlank(message = "Application name is required")
     @Column(nullable = false)
     private String name;
     

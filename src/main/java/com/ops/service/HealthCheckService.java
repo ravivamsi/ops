@@ -9,12 +9,16 @@ import kong.unirest.UnirestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class HealthCheckService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(HealthCheckService.class);
     
     @Autowired
     private HealthCheckRepository healthCheckRepository;
@@ -45,6 +49,7 @@ public class HealthCheckService {
     
     public void performHealthCheck(HealthCheck healthCheck) {
         try {
+            logger.debug("Performing health check for: {} at URL: {}", healthCheck.getName(), healthCheck.getUrl());
             long startTime = System.currentTimeMillis();
             
             HttpResponse<JsonNode> response = Unirest.get(healthCheck.getUrl())
@@ -61,11 +66,16 @@ public class HealthCheckService {
             
             // Enhanced health status validation
             boolean isHealthy = validateHealthResponse(response);
-            healthCheck.setStatus(isHealthy ? HealthCheck.HealthStatus.HEALTHY : HealthCheck.HealthStatus.UNHEALTHY);
+            HealthCheck.HealthStatus newStatus = isHealthy ? HealthCheck.HealthStatus.HEALTHY : HealthCheck.HealthStatus.UNHEALTHY;
+            healthCheck.setStatus(newStatus);
+            
+            logger.info("Health check for {}: Status={}, ResponseTime={}ms, HTTPStatus={}", 
+                      healthCheck.getName(), newStatus, responseTime, response.getStatus());
             
             healthCheckRepository.save(healthCheck);
             
         } catch (UnirestException e) {
+            logger.error("Health check failed for {}: {}", healthCheck.getName(), e.getMessage());
             healthCheck.setStatus(HealthCheck.HealthStatus.UNHEALTHY);
             healthCheck.setLastChecked(LocalDateTime.now());
             healthCheck.setLastResponse("Error: " + e.getMessage());
@@ -74,8 +84,9 @@ public class HealthCheckService {
     }
     
     private boolean validateHealthResponse(HttpResponse<JsonNode> response) {
-        // Check HTTP status code first
-        if (response.getStatus() < 200 || response.getStatus() >= 300) {
+        // Check for exactly 200 OK status
+        if (response.getStatus() != 200) {
+            logger.debug("Health check validation failed: HTTP status {} is not 200", response.getStatus());
             return false;
         }
         
@@ -83,49 +94,57 @@ public class HealthCheckService {
             JsonNode body = response.getBody();
             String responseText = body.toString().toLowerCase();
             
-            // Check if response contains health status indicators
+            // Check if response contains "healthy" status value
             if (responseText.contains("\"status\"")) {
-                if (responseText.contains("\"healthy\"") || responseText.contains("\"up\"") || responseText.contains("\"ok\"")) {
+                if (responseText.contains("\"healthy\"")) {
                     return true;
                 }
-                if (responseText.contains("\"unhealthy\"") || responseText.contains("\"down\"") || responseText.contains("\"error\"")) {
-                    return false;
-                }
+                // If status field exists but doesn't contain "healthy", consider unhealthy
+                return false;
             }
             
             if (responseText.contains("\"health\"")) {
-                if (responseText.contains("\"healthy\"") || responseText.contains("\"up\"") || responseText.contains("\"ok\"")) {
+                if (responseText.contains("\"healthy\"")) {
                     return true;
                 }
-                if (responseText.contains("\"unhealthy\"") || responseText.contains("\"down\"") || responseText.contains("\"error\"")) {
-                    return false;
-                }
+                // If health field exists but doesn't contain "healthy", consider unhealthy
+                return false;
             }
             
             if (responseText.contains("\"state\"")) {
-                if (responseText.contains("\"healthy\"") || responseText.contains("\"up\"") || responseText.contains("\"ok\"")) {
+                if (responseText.contains("\"healthy\"")) {
                     return true;
                 }
-                if (responseText.contains("\"unhealthy\"") || responseText.contains("\"down\"") || responseText.contains("\"error\"")) {
-                    return false;
-                }
+                // If state field exists but doesn't contain "healthy", consider unhealthy
+                return false;
             }
             
-            // If no specific health indicators found, consider 2xx responses as healthy
-            return true;
+            // If no status/health/state fields found, check if response contains "healthy" anywhere
+            if (responseText.contains("\"healthy\"")) {
+                return true;
+            }
+            
+            // If no "healthy" indicator found, consider unhealthy
+            logger.debug("Health check validation failed: No 'healthy' indicator found in response");
+            return false;
             
         } catch (Exception e) {
             // If JSON parsing fails, consider it unhealthy
+            logger.debug("Health check validation failed: JSON parsing error - {}", e.getMessage());
             return false;
         }
     }
     
-    @Scheduled(fixedRate = 300000) // Run every 5 minutes
+    @Scheduled(fixedRate = 5000) // Run every 5 seconds
     public void performScheduledHealthChecks() {
         List<HealthCheck> allHealthChecks = healthCheckRepository.findAll();
+        logger.debug("Starting scheduled health checks for {} endpoints", allHealthChecks.size());
+        
         for (HealthCheck healthCheck : allHealthChecks) {
             performHealthCheck(healthCheck);
         }
+        
+        logger.debug("Completed scheduled health checks");
     }
     
     public double getAppHealthPercentage(Long appId) {

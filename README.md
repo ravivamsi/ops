@@ -138,7 +138,16 @@ Key configuration options in `application.properties`:
 
 ### Health Check Configuration
 
-Health checks are automatically performed every 5 minutes. You can modify the schedule in `HealthCheckService.java`.
+Health checks are automatically performed every 5 seconds. The system validates health check responses using the following criteria:
+
+1. **HTTP Status Code**: Must be exactly 200 OK
+2. **Response Content**: Must contain "healthy" status value in JSON response
+3. **Validation Logic**: 
+   - Checks for "status", "health", or "state" fields containing "healthy"
+   - If no specific fields found, looks for "healthy" anywhere in response
+   - Only marks as HEALTHY if both 200 OK and "healthy" status are present
+
+You can modify the schedule in `HealthCheckService.java` by changing the `@Scheduled(fixedRate = 5000)` annotation.
 
 ## Development
 
@@ -170,6 +179,13 @@ Operations support all HTTP methods (GET, POST, PUT, DELETE, PATCH). Configure o
 Application logs are available at DEBUG level for troubleshooting:
 - Spring Web: `logging.level.org.springframework.web=DEBUG`
 - Application: `logging.level.com.ops=DEBUG`
+- Health Check Service: `logging.level.com.ops.service.HealthCheckService=DEBUG`
+
+Health check logs show:
+- When health checks are performed
+- Response times and HTTP status codes
+- Validation results and status changes
+- Error messages for failed health checks
 
 ## Contributing
 

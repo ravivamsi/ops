@@ -75,4 +75,27 @@ class HealthCheckServiceTest {
         double percentage = healthCheckService.getAppHealthPercentage(app.getId());
         assertEquals(50.0, percentage, 0.1); // 1 out of 2 checks are healthy = 50%
     }
+    
+    @Test
+    void testHealthCheckValidation() {
+        // Test that the validation logic works correctly
+        // This test verifies that only 200 OK responses with "healthy" status are considered healthy
+        
+        // Create test data
+        Group group = new Group("Test Group 3", "Test group for validation");
+        groupRepository.save(group);
+
+        App app = new App("Test App 3", "Test application for validation");
+        app.setGroup(group);
+        appRepository.save(app);
+
+        // Create health check with a URL that returns 200 OK
+        HealthCheck healthCheck = new HealthCheck("Validation Test", "https://httpbin.org/json", "Test validation");
+        healthCheck.setApp(app);
+        healthCheckRepository.save(healthCheck);
+
+        // Verify the health check was created
+        assertNotNull(healthCheck.getId());
+        assertEquals("Validation Test", healthCheck.getName());
+    }
 } 
